@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"log"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/HunterGooD/testWEBRTC/internal/app"
 	"github.com/HunterGooD/testWEBRTC/internal/db"
@@ -12,6 +14,8 @@ import (
 )
 
 func main() {
+
+	rand.Seed(time.Now().Unix())
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -1,8 +1,7 @@
 package app
 
 import (
-	"log"
-	"strconv"
+	"net/http"
 
 	"github.com/HunterGooD/testWEBRTC/internal/db"
 	"github.com/HunterGooD/testWEBRTC/internal/utils"
@@ -10,75 +9,62 @@ import (
 	"gorm.io/gorm"
 )
 
-func (a *App) seedRandomDB() {
-	var u1 db.User
-	if err := a.DB.Model(&db.User{}).Where("id = ?", 1).First(&u1).Error; err != nil {
-		if gorm.ErrRecordNotFound != err {
-			log.Println("Произошла ошибка в полечении записи")
-			return
-		}
-	}
-
-	var rooms = make([]db.Room, 2)
-
-	for i := 0; i < 2; i++ {
-		var r db.Room
-		r = db.Room{
-			Name:     "room_" + strconv.Itoa(i),
-			Password: "",
-		}
-
-		if err := a.DB.Create(&r).Error; err != nil {
-			log.Printf("Не удается создать комнату %v", err)
-		}
-		rooms[i] = r
-	}
-
-	for i := 0; i < 5; i++ {
-		var u db.User
-		var r []db.Room
-		pass, err := utils.HashPassword("test_" + strconv.Itoa(i))
-		if err != nil {
-			panic(err)
-		}
-
-		if i%2 == 0 {
-			r = rooms
-		}
-
-		u = db.User{
-			Login:    "test_" + strconv.Itoa(i),
-			Password: pass,
-			Avatar:   "https://image.flaticon.com/icons/png/512/18/18601.png",
-			Rooms:    r,
-		}
-
-		if err := a.DB.Create(&u).Error; err != nil {
-			log.Printf("Не удается создать пользователя %v", err)
-		}
-	}
-}
-
-func (a *App) signin(ctx *gin.Context) {
+func (a *App) signin(c *gin.Context) {
 	type ReqUserData struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`
 	}
 	reqData := new(ReqUserData)
-	ctx.BindJSON(reqData)
+	c.BindJSON(reqData)
+	var dbUser db.User
+
+	if err := a.DB.Model(&db.User{}).Where("login = ?", reqData.Login).First(&dbUser).Error; err != nil {
+		if gorm.ErrRecordNotFound == err {
+			c.JSON(http.StatusNotFound, map[string]interface{}{
+				"error": "Такой записи не существует",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "При получении данных произошла ошибка.",
+		})
+		return
+	}
+
+	if !utils.CheckPasswordHash(reqData.Password, dbUser.Password) {
+		c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"error": "Не верный пароль.",
+		})
+		return
+	}
+
+	rBytes, _ := utils.RandomBytes(32)
+	token := utils.CreateToken(dbUser.ID, rBytes)
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"surname":  dbUser.Surname,
+		"name":     dbUser.Name,
+		"lastname": dbUser.Lastname,
+		"token":    token,
+	})
 }
 
-func (a *App) logout(ctx *gin.Context) {
-
-}
-func (a *App) getRooms(ctx *gin.Context) {
+func (a *App) logout(c *gin.Context) {
 
 }
 
-func (a *App) createRoom(ctx *gin.Context) {
+func (a *App) getRooms(c *gin.Context) {
+	userID, _ := c.Get("userInfo")
+	a.DB.Where("user_id = ?", userID)
+	var u db.User
+	a.DB.Model(&db.User{}).Where("id = ?", userID).Preload("Rooms").Find(&u)
+	c.JSON(http.StatusOK, u)
+}
+
+func (a *App) createRoom(c *gin.Context) {
 
 }
 
-func (a *App) joinRoom(ctx *gin.Context) {
+func (a *App) joinRoom(c *gin.Context) {
 
 }

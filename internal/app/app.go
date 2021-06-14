@@ -21,13 +21,18 @@ func New(addr string, DB *gorm.DB) *App {
 func (a *App) Start() {
 	router := gin.Default()
 
-	router.POST("/signin", a.signin)
-	router.POST("/logout", a.logout)
-	router.GET("/rooms", a.getRooms)
-	router.POST("/room/create", a.createRoom)
-	router.Any("/room/join", a.joinRoom)
+	middleware := router.Group("/")
 
+	middleware.Use(a.middleware)
+
+	router.POST("/signin", a.signin)
+	middleware.POST("/logout", a.logout)
+	middleware.GET("/rooms", a.getRooms)
+	middleware.POST("/room/create", a.createRoom)
+	middleware.Any("/room/join", a.joinRoom)
+
+	//TODO: потом удалить
 	a.seedRandomDB()
 
-	router.Run()
+	router.Run(a.addr)
 }
