@@ -10,3 +10,6 @@ build: clean
 
 clean:
 	@rm -rf ./dist
+
+dev:
+	PORT=8080 go run cmd/testwebrtc/main.go
