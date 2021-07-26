@@ -31,12 +31,12 @@ func (a *App) Start() {
 
 	middleware.Use(a.middleware)
 
-	router.POST("/signin", a.signin)
-	middleware.POST("/logout", a.logout)
-	middleware.GET("/rooms", a.getRooms)
-	middleware.POST("/room/create", a.createRoom)
-	middleware.POST("/room/:name/delete", a.deleteRoom)
-	router.Any("/room/:name/join", a.joinRoom)
+	router.POST("/api/signin", a.signin)
+	middleware.POST("/api/logout", a.logout)
+	middleware.GET("/api/rooms", a.getRooms)
+	middleware.POST("/api/room/create", a.createRoom)
+	middleware.POST("/api/room/:name/delete", a.deleteRoom)
+	router.Any("/api/room/:name/join", a.joinRoom)
 
 	//TODO: потом удалить
 	a.seedRandomDB()
@@ -65,6 +65,7 @@ func (a *App) StartExistsRooms() error {
 			peerConnections: []peerConnectionState{},
 			trackLocals:     map[string]*webrtc.TrackLocalStaticRTP{},
 		}
+		go r.dispatchTimer()
 		a.Rooms = append(a.Rooms, &r)
 	}
 	return nil

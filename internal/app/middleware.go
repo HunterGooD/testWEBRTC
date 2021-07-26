@@ -72,6 +72,9 @@ func (a *App) seedRandomDB() {
 		}
 
 		u = db.User{
+			Name:     "Name_" + strconv.Itoa(i),
+			Surname:  "Surname_" + strconv.Itoa(i),
+			Lastname: "Lastname_" + strconv.Itoa(i),
 			Login:    "test_" + strconv.Itoa(i),
 			Password: pass,
 			Avatar:   "https://image.flaticon.com/icons/png/512/18/18601.png",

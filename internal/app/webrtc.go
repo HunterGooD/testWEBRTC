@@ -50,6 +50,7 @@ func (r *Room) addTrack(t *webrtc.TrackRemote) *webrtc.TrackLocalStaticRTP {
 
 	r.trackLocals[t.ID()] = trackLocal
 	return trackLocal
+
 }
 
 // Удаляет соединение и уведомляет всех
